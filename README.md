@@ -66,10 +66,15 @@ javac *.java
 java NaiveTimingDemo
 ```
 
-If you personally prefer working inside Maven, Gradle, or Ant, you're
-welcome to set one up for your own convenience, but it has to be in
+If you personally prefer building using Maven, Gradle, or Ant, you're
+welcome to set one up for your own convenience, but that must be in
 addition to the plain `javac`/`java` path working, never in place of it.
 (Note that adopting one of those tools typically means moving these files
-into a package and a `src/main/java/...` layout; that's fine for your own
+into a package and a `src/main/java/...` layout. That's fine for your own
 setup, but the version you submit still needs the plain-`javac` path to
 work unmodified.)
+
+-----
+## License
+
+This project is open source, &copy; Dr. Jody Paul, and available under the [MIT License](LICENSE.md).
