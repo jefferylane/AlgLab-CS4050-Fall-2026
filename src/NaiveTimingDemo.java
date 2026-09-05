@@ -9,6 +9,7 @@
  */
 public class NaiveTimingDemo {
 
+    /*
     public static void main(String[] args) {
         System.out.println("--- Part 1: reusing the same array across trials ---");
         part1_mutationBug();
@@ -17,6 +18,7 @@ public class NaiveTimingDemo {
         System.out.println("--- Part 2: one trial per size, no warm-up ---");
         part2_singleTrialNoise();
     }
+    */
 
     /**
      * Sorts the SAME array object five times in a row without regenerating

@@ -1,22 +1,4 @@
 public class Measurement {
-    public static void main(String[] args) {
-        Algorithm<int[]> algorithm = new InsertionSort();
-        InputGenerator<int[]> generator = new RandomIntArrayGenerator(42L);
-        Measurement measurement = new Measurement();
-
-        int[] sizes = {500, 1000, 2000, 4000};
-        int warmUpTrials = 500;
-        int timedTrials = 10;
-
-        for (int size : sizes) {
-            long[] results = measurement.measure(algorithm, generator, size, warmUpTrials, timedTrials);
-            System.out.println("Size: " + size + ", results: ");
-            for (long result : results) {
-                System.out.println(result + "ns");
-            }
-        }
-    }
-
     public <T> long[] measure(Algorithm<T> algorithm, InputGenerator<T> generator, int size, int warmUpTrials, int timedTrials) {
         warmUp(algorithm, generator, size, warmUpTrials);
         return runTimedTrials(algorithm, generator, size, timedTrials);
