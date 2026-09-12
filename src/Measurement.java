@@ -13,6 +13,8 @@ public class Measurement {
     }
 
     private <T> void warmUp(Algorithm<T> algorithm, InputGenerator<T> generator, int size, int warmUpTrials) {
+        System.out.printf("Warming up " + warmUpTrials + " times...%n");
+
         for (int i = 0; i < warmUpTrials; i++) {
             T input = generator.generate(size);
             algorithm.execute(input);
@@ -21,6 +23,7 @@ public class Measurement {
 
     private <T> long[] runTimedTrials(Algorithm<T> algorithm, InputGenerator<T> generator, int size, int timedTrials) {
         long[] timedTrialResults = new long[timedTrials];
+        System.out.printf("Timing " + timedTrials + " trials on " + size + " random integers...%n"); 
 
         for (int trial = 0; trial < timedTrials; trial++) {
             T input = generator.generate(size);
