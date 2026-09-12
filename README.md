@@ -1,80 +1,87 @@
-# Algorithm Performance Laboratory — Starter Code
+# Algorithm Performance Laboratory
 
-This is a starting point, not a solution. It gives you two things:
+CS4050-003 · Fall 2026 · Jeffery Lane
 
-1. **The two interfaces the rest of your framework should build on**
-   (`Algorithm<T>` and `InputGenerator<T>`), plus some ready-to-use
-   implementations of each so you aren't spending your time re-deriving
-   basic sorting algorithms.
-2. **`NaiveTimingDemo`**, a deliberately bad timing example. Run it a few
-   times (the flaws are easiest to see across repeated runs) before you
-   start designing your own framework. It exists to make two problems
-   concrete instead of abstract:
-   - measuring the *same trial* more than once without regenerating input
-     that the algorithm mutates, and
-   - drawing conclusions from a single, un-warmed-up measurement.
+A framework for experimentally measuring and analyzing the runtime growth
+of four sorting algorithms (Insertion Sort, Selection Sort, Merge Sort, and
+`java.util.Arrays.sort`) and comparing the results against their theoretical
+growth models.
 
-   Your framework's job is to not have these problems.
+## Requirements
 
-Everything lives in the unnamed (default) package.
-That's deliberate: this is exactly the kind of small, self-contained,
-experimental codebase the unnamed package exists for, and it keeps the
-file layout flat and simple.
+- A working JDK (`javac` and `java` on your PATH). No Maven, Gradle, or Ant
+  required — everything builds and runs with plain `javac`/`java`.
 
-## What's provided
+## Building and Running
+
+All source files live in `src/` in the unnamed (default) package. Build and
+run from inside that directory:
+
+```bash
+cd src
+javac *.java
+java Main
+```
+
+**Important:** Run `java Main` from inside the `src/` directory, not from
+the project root. Output paths (see below) are resolved relative to
+whatever directory you launch `java` from, so running from the wrong place
+will still work, but will scatter your output files somewhere other than
+where you expect them.
+
+If you're running from an IDE instead of a terminal, check your run
+configuration's "working directory" setting — some IDEs default this to
+the project root rather than `src/`. Set it to `src/` to match the
+terminal instructions above.
+
+## What Running It Does
+
+`Main` runs all four algorithms across input sizes 1,000 / 2,000 / 4,000 /
+8,000 / 16,000, with 1,000 warm-up trials and 100 timed trials per size.
+For each algorithm it:
+
+1. Times execution across all input sizes (with fresh random input
+   generated for every trial).
+2. Computes mean, median, and standard deviation of the timings.
+3. Compares the timing data against three theoretical growth models
+   (linear, linearithmic, quadratic) and reports which one fits best.
+4. Prints a summary of all of the above to the terminal.
+
+Progress and per-algorithm/per-model results print to the terminal as the
+program runs — this will take a few minutes given the trial and warm-up
+counts, so don't worry if it's not instant.
+
+## Output Files
+
+After running, CSV output is written to a `reports/` folder created
+alongside the source files (i.e. `src/reports/`, if you ran it as
+instructed above):
+
+- `reports/<AlgorithmName>_report.csv` — one file per algorithm, with
+  columns `size, mean_ns, median_ns, stdev_ns`.
+- `reports/combined_results.csv` — all four algorithms' data combined into
+  one file, with an added `algorithm` column.
+
+These CSVs are what you'd feed into a spreadsheet or plotting tool to
+produce the performance-vs-size plots referenced in the written report.
+
+## Project Structure
 
 ```
 src/
   Algorithm.java              -- interface: an algorithm under study
   InputGenerator.java         -- interface: produces inputs of a given size
-  SelectionSort.java          -- O(n^2)
   InsertionSort.java          -- O(n^2)
+  SelectionSort.java          -- O(n^2)
   MergeSort.java               -- O(n log n)
-  ArraysSortWrapper.java      -- wraps java.util.Arrays.sort (JDK dual-pivot quicksort)
+  ArraysSortWrapper.java      -- wraps java.util.Arrays.sort
   RandomIntArrayGenerator.java
-  NaiveTimingDemo.java        -- run this first; see above
+  Measurement.java            -- warm-up, timed trials, basic stats
+  Experiment.java             -- runs one algorithm across a range of sizes
+  PerformanceData.java        -- size -> timing statistics table
+  Analysis.java                -- fits empirical data against growth models
+  AnalysisResult.java          -- holds one model's fit result
+  Report.java                  -- CSV export
+  Main.java                    -- wires everything together and runs it
+  NaiveTimingDemo.java         -- (starter code) example of bad timing practice
 ```
-
-## What you need to design and build
-
-Everything downstream of "I have an `Algorithm` and an `InputGenerator`":
-
-- **Experiment** — orchestrates running one `Algorithm` against inputs of
-  increasing size produced by an `InputGenerator`.
-- **Measurement** — actually times a run. This is where warm-up, repeated
-  trials, and basic statistics (mean, median, standard deviation — your
-  choice, but justify it) belong.
-- **PerformanceData** — the resulting table of (input size → timing
-  statistics) for one algorithm.
-- **Analysis** — compares the empirical data against a theoretical
-  growth-rate model and reports how well they match.
-- **Report** — produces output a human (or a plotting tool) can use.
-  At minimum, produce a CSV export of size vs. timing statistics.
-
-See the assignment handout for the full requirements and rubric.
-
-## Building and running
-
-Your submission must build and run with nothing but plain `javac`/`java`.
-Grading does not assume Maven, Gradle, Ant, or any particular IDE, so don't
-structure your code in a way that depends on one of them being present.
-The baseline that must always work:
-
-```bash
-cd src
-javac *.java
-java NaiveTimingDemo
-```
-
-If you personally prefer building using Maven, Gradle, or Ant, you're
-welcome to set one up for your own convenience, but that must be in
-addition to the plain `javac`/`java` path working, never in place of it.
-(Note that adopting one of those tools typically means moving these files
-into a package and a `src/main/java/...` layout. That's fine for your own
-setup, but the version you submit still needs the plain-`javac` path to
-work unmodified.)
-
------
-## License
-
-This project is open source, &copy; Dr. Jody Paul, and available under the [MIT License](LICENSE.md).

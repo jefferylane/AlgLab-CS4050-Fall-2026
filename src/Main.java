@@ -1,3 +1,4 @@
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -27,6 +28,7 @@ public class Main {
         Experiment experiment = new Experiment();
         Analysis analysis = new Analysis();
         Report report = new Report();
+        String reportsDir = "reports";
 
         int[] sizes = {1000, 2000, 4000, 8000, 16000};
         int warmUpTrials = 1000;
@@ -75,10 +77,16 @@ public class Main {
 
             allData.put(algoName, data);
 
-            String filepath = algoName + "_report.csv";
+            String filepath = reportsDir + File.separator + sanitizeFilename(algoName) + "_report.csv";
             report.toCSV(data, filepath);
         }
 
-        report.toCombinedCSV(allData, "combined_results.csv");
+        report.toCombinedCSV(allData, reportsDir + File.separator + "combined_results.csv");
+
+        System.out.println("Tests completed! Report CSVs found in reports folder inside of src folder.");
+    }
+
+    private static String sanitizeFilename(String name) {
+        return name.replaceAll("[^a-zA-Z0-9.-]", "");
     }
 }
