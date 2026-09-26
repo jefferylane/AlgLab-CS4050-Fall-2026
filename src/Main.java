@@ -4,9 +4,13 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) throws IOException {
+        Scanner scanner = new Scanner(System.in);
+        boolean running = true;
+
         System.out.printf("%nAlgorithm Lab: Testing the performance of sorting algorithms%n"
                         + "Jeffery Lane | CS4050-003 Fall 2026%n%n"
 
@@ -30,60 +34,117 @@ public class Main {
         Report report = new Report();
         String reportsDir = "reports";
 
-        int[] sizes = {1000, 2000, 4000, 8000, 16000};
-        int warmUpTrials = 1000;
-        int timedTrials = 100;
+        /*  Two size scales instead of one.
 
-        /*  The sizes initially ranged from 500 - 32000, but 32000 took too long
-            for my mac, and 500 ended up feeling like dead weight due to testing
-            array sort. The analysis of array sort kept coming back as linear
-            in a coefficient of variations test, ended up being due to noise in
-            the 500 - 1000 size range.
+            slowScaleSizes stays as-is for Insertion Sort and Selection Sort —
+            O(n^2) work means anything much larger than 16,000 starts taking
+            a long time per trial.
 
-            That's also why warm up trials ended up being set to 1000. Initially,
-            it was running ok at like 200-500, but when testing array sort it
-            seemed to need much more priming than the other algorithms.
+            fastScaleSizes is for Merge Sort and Arrays.sort. Both are
+            O(n log n), so they can handle far larger n in the same wall-clock
+            budget, and a wider range is *needed*: across 1,000-16,000,
+            log(n) only changes by about 40%, which makes linear and
+            linearithmic growth hard to tell apart numerically (this is the
+            issue documented in methodology-learnings). Widening the range
+            here gives log(n) more room to move, which should make the
+            n log n fit separate more clearly from a pure linear fit.
 
-            I wanted to think about building in setting the warm ups at different
-            amounts based on the algorithm but it's out of scope so i skipped that
-            just to keep running along with the rest of the program.
-
-            Timed trials are set at 100 just because i felt that was a reasonable
-            amount to get ok mean, median, and std. dev. data.
+            Which algorithm uses which scale is decided explicitly above
+            (slowScaleAlgorithms / fastScaleAlgorithms), not inferred at
+            runtime -- there's no requirement for the program to figure
+            this out on its own.
          */
 
-        Map<String, PerformanceData> allData = new LinkedHashMap<>();
+        int[] slowScaleSizes = {1000, 2000, 4000, 8000, 16000};
+        int[] fastScaleSizes = {20000, 40000, 80000, 160000, 320000};
+        
+        List<Algorithm<int[]>> slowScaleAlgorithms = Arrays.asList(algorithms.get(0), algorithms.get(1));
+        List<Algorithm<int[]>> fastScaleAlgorithms = Arrays.asList(algorithms.get(2), algorithms.get(3));
 
-        for (Algorithm<int[]> algorithm : algorithms) {
-            String algoName = algorithm.getName();
-            System.out.printf("Running experiment on " + algoName + "...%n%n");
+        int warmUpTrials = 100;
+        int timedTrials = 100;
 
-            PerformanceData data = experiment.run(algorithm, generator, sizes, warmUpTrials, timedTrials);
-            List<PerformanceData.Row> rows = data.getRows();
+        while (running) {
+            System.out.println("\n--- Main Menu ---");
+            System.out.println("1. Insertion Sort");
+            System.out.println("2. Selection Sort");
+            System.out.println("3. Merge Sort");
+            System.out.println("4. Array Sort (Wrapper)");
+            System.out.println("5. Run All Tests");
+            System.out.println("6. Exit");
+            System.out.print("Select an option: ");
 
-            List<AnalysisResult> results = analysis.compareAll(data);
+            String choice = scanner.nextLine();
 
-            for (AnalysisResult result : results) {
-                System.out.printf("Analyzing against " + result.model + " model...%n%n");
-                for (int i = 0; i < rows.size(); i++) {
-                    System.out.printf("size=%d  mean=%.1fns ratio=%.8f%n",
-                            rows.get(i).size, rows.get(i).meanNanosecs, result.ratios.get(i));
-                }
-                System.out.printf("%n%-13s CV=%.4f%n%n", result.model, result.coefficientOfVariation);
+            switch (choice) {
+                case "1":
+                    runExperiment(algorithms.get(0), experiment, generator, analysis, report, reportsDir,
+                            slowScaleSizes, warmUpTrials, timedTrials);
+                    break;
+                case "2":
+                    runExperiment(algorithms.get(1), experiment, generator, analysis, report, reportsDir,
+                            slowScaleSizes, warmUpTrials, timedTrials);
+                    break;
+                case "3":
+                    runExperiment(algorithms.get(2), experiment, generator, analysis, report, reportsDir,
+                            fastScaleSizes, warmUpTrials, timedTrials);
+                    break;
+                case "4":
+                    runExperiment(algorithms.get(3), experiment, generator, analysis, report, reportsDir,
+                            fastScaleSizes, warmUpTrials, timedTrials);
+                    break;
+                case "5":
+                    Map<String, PerformanceData> allData = new LinkedHashMap<>();
+                    for (Algorithm<int[]> algorithm : slowScaleAlgorithms) {
+                        allData.put(algorithm.getName(),
+                                runExperiment(algorithm, experiment, generator, analysis, report, reportsDir,
+                                        slowScaleSizes, warmUpTrials, timedTrials));
+                    }
+                    for (Algorithm<int[]> algorithm : fastScaleAlgorithms) {
+                        allData.put(algorithm.getName(),
+                                runExperiment(algorithm, experiment, generator, analysis, report, reportsDir,
+                                        fastScaleSizes, warmUpTrials, timedTrials));
+                    }
+                    report.toCombinedCSV(allData, reportsDir + File.separator + "combined_results.csv");
+                    break;
+                case "6":
+                    running = false;
+                    System.out.println("Exiting...");
+                    break;
+                default:
+                    System.out.println("Invalid selection. Please try again.");
             }
+        }
+        scanner.close();
+    }
 
-            AnalysisResult best = analysis.findBestFit(results);
-            System.out.printf("  --> Best fit: %s (CV=%.4f)%n%n", best.model, best.coefficientOfVariation);
+    private static PerformanceData runExperiment(Algorithm<int[]> algorithm, Experiment experiment, InputGenerator<int[]> generator,
+                                     Analysis analysis, Report report, String reportsDir,
+                                     int[] sizes, int warmUpTrials, int timedTrials) throws IOException {
+        String algoName = algorithm.getName();
+        System.out.printf("Running experiment on %s (sizes=%s)...%n%n", algoName, Arrays.toString(sizes));
 
-            allData.put(algoName, data);
+        PerformanceData data = experiment.run(algorithm, generator, sizes, warmUpTrials, timedTrials);
+        List<PerformanceData.Row> rows = data.getRows();
 
-            String filepath = reportsDir + File.separator + sanitizeFilename(algoName) + "_report.csv";
-            report.toCSV(data, filepath);
+        List<AnalysisResult> results = analysis.compareAll(data);
+
+        for (AnalysisResult result : results) {
+            System.out.printf("Analyzing against %s model...%n%n", result.model);
+            for (int i = 0; i < rows.size(); i++) {
+                System.out.printf("size=%d  mean=%.1fns ratio=%.8f%n",
+                        rows.get(i).size, rows.get(i).meanNanosecs, result.ratios.get(i));
+            }
+            System.out.printf("%n%-13s CV=%.4f%n%n", result.model, result.coefficientOfVariation);
         }
 
-        report.toCombinedCSV(allData, reportsDir + File.separator + "combined_results.csv");
+        AnalysisResult best = analysis.findBestFit(results);
+        System.out.printf("  --> Best fit: %s (CV=%.4f)%n%n", best.model, best.coefficientOfVariation);
 
-        System.out.println("Tests completed! Report CSVs found in reports folder inside of src folder.");
+        String filepath = reportsDir + File.separator + sanitizeFilename(algoName) + "_report.csv";
+        report.toCSV(data, filepath);
+
+        return data;
     }
 
     private static String sanitizeFilename(String name) {

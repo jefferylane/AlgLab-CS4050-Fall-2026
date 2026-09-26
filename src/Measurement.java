@@ -13,7 +13,7 @@ public class Measurement {
     }
 
     private <T> void warmUp(Algorithm<T> algorithm, InputGenerator<T> generator, int size, int warmUpTrials) {
-        System.out.printf("Warming up " + warmUpTrials + " times...%n");
+        System.out.printf("Warming up %d times...%n", warmUpTrials);
 
         for (int i = 0; i < warmUpTrials; i++) {
             T input = generator.generate(size);
